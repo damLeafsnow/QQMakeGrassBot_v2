@@ -1,5 +1,5 @@
-# -*-coding:utf8-*-
-from nonebot.default_config import *
+# # -*-coding:utf8-*-
+from nonebot.config import *
 
 SUPERUSERS = {329136865}    # 管理员账户
 COMMAND_START = {'.'}  # 命令起始符
