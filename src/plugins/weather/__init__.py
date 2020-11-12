@@ -7,7 +7,7 @@ import importlib
 import json
 importlib.reload(sys)
 
-weather = on_command("天气", priority=5)
+weather = on_command("天气", priority=1, block=True)
 
 
 # 添加一个处理函数
@@ -36,7 +36,12 @@ async def get_weather(city: str):
     url = host + urllib.parse.quote(city)
     r = requests.get(url)
     jsons = json.loads(r.text)
-    res = city+'天气:\n'
-    for i in jsons['data']['forecast']:
-        res += i['date']+':天气'+i['type']+' 最'+i['low']+' 最'+i['high']+'\n'
-    return res
+    # print(jsons)
+    if jsons['status'] == 1000:
+        res = city+'天气:\n'
+        for i in jsons['data']['forecast']:
+            res += i['date']+':天气'+i['type']+' 最'+i['low']+' 最'+i['high']+'\n'
+        res += '提示:' + jsons['data']['ganmao']
+        return res
+    else:
+        return "城市名错误."

@@ -1,18 +1,34 @@
-# -*-coding:utf8-*-
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
 import nonebot
-# import config
+import nonebot.config
 
+# Custom your logger
+# 
+# from nonebot.log import logger, default_format
+# logger.add("error.log",
+#            rotation="00:00",
+#            diagnose=False,
+#            level="ERROR",
+#            format=default_format)
 
-def main():
-    nonebot.init()
-    # nonebot.load_builtin_plugins()
-    # 加载单独的一个插件，参数为合法的python包名
-    nonebot.load_plugin("nonebot.plugins.base")
-    # 加载插件目录，该目录下为各插件，以下划线开头的插件将不会被加载
-    nonebot.load_plugins("src/plugins")
-    app = nonebot.get_asgi()
-    nonebot.run()
+# You can pass some keyword args config to init function
+config_setting = {
+    'command_start': {"."},
+    'command_sep': {","},
+}
+nonebot.init(**config_setting)
+app = nonebot.get_asgi()
+
+nonebot.load_builtin_plugins()
+nonebot.load_plugins("src/plugins")
+
+# Modify some config / config depends on loaded configs
+# 
+# config = nonebot.get_driver().config
+# do something...
 
 
 if __name__ == "__main__":
-    main()
+    nonebot.run(app="bot:app")
