@@ -139,10 +139,6 @@ def getUserInfobyUID(uid: str) -> {}:
 
 
 def GetDynamicStatus(uid, i):
-    if not dynamic_list or not live_list:
-        loadDatas()
-        loadUIDdata()
-
     res = requests.get(
         'https://api.vc.bilibili.com/dynamic_svr/v1/dynamic_svr/space_history?host_uid='+str(uid)+'offset_dynamic_id=0')
     res.encoding = 'utf-8'
@@ -229,10 +225,6 @@ def GetDynamicStatus(uid, i):
 
 
 def GetLiveStatus(uid, i):
-    if not dynamic_list or not live_list:
-        loadDatas()
-        loadUIDdata()
-
     try:
         with open('./dynamics/'+str(uid)+'_'+str(i)+'Live', 'r') as f:
             last_live_str = f.read()

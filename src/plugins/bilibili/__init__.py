@@ -3,6 +3,8 @@ from nonebot.plugin import on_keyword
 from nonebot.adapters.cqhttp import Bot, Event
 from nonebot import scheduler, get_bots
 from time import sleep
+from os import path
+import json
 from .bilibili import get_bilibili_info_by_avid, get_bilibili_info_by_bvid
 from .bilibili import get_bilibili_info_by_b23tv, get_bilibili_live_info
 from .bilibili import getUserInfobyUID
@@ -14,6 +16,12 @@ bilibili_b23 = on_keyword({"b23.tv"}, priority=1, block=True)
 bilibili_live = on_keyword({"live.bilibili.com"}, priority=1, block=True)
 bilibili_uid = on_keyword({"space.bilibili.com"}, priority=1, block=True)
 bilibili_user = on_command('用户查询', aliases={'uid'}, priority=1, block=True)
+bilibili_adddy = on_command('添加动态关注', aliases={'biliadddy'}, priority=1, block=True)
+bilibili_deldy = on_command('取消动态关注', aliases={'bilideldy'}, priority=1, block=True)
+bilibili_addly = on_command('添加直播关注', aliases={'biliaddlive'}, priority=1, block=True)
+bilibili_delly = on_command('取消直播关注', aliases={'bilidellive'}, priority=1, block=True)
+bilibili_dylist = on_command('动态关注列表', aliases={'bilidylist'}, priority=1, block=True)
+bilibili_lylist = on_command('直播关注列表', aliases={'bililivelist'}, priority=1, block=True)
 debug_group = 1087849813
 dynamic_list = {}
 live_list = {}
@@ -21,16 +29,20 @@ uid_dict = {}
 
 
 @scheduler.scheduled_job('interval', minutes=5)
+# @scheduler.scheduled_job('interval', seconds=40)     # 测试用
 async def get_bilibili_infos():
     if not dynamic_list or not live_list:
         loadDatas()
         loadUIDdata()
 
-    bot = nonebot.get_bots()
+    bots = get_bots()
+    # print(bots)
+    bot = bots['2433627163']
     # 获取动态更新
     for key in dynamic_list.keys():
         for uid in dynamic_list[key]:
-            sleep(1)
+            # print('dynamic'+uid)
+            sleep(0.2)
             dynamic_content = GetDynamicStatus(uid, key)
             if dynamic_content:
                 await bot.send_group_msg(group_id=debug_group,
@@ -41,13 +53,15 @@ async def get_bilibili_infos():
     # 获取直播更新
     for key in live_list.keys():
         for uid in live_list[key]:
-            sleep(1)
+            # print('live'+uid)
+            sleep(0.2)
             live_msg = GetLiveStatus(uid, key)
             if live_msg:
                 await bot.send_group_msg(group_id=debug_group,
                                          message=uid+'有新直播消息,正在推送.')
                 for content in live_msg:
                     await bot.send_group_msg(group_id=key, message=content)
+    print('interval get_bilibili_infos finished')
 
 
 @bilibili_vid.handle()
@@ -203,6 +217,187 @@ async def handle_uid(bot: Bot, event: Event, state: dict):
 
     # 消息推送
     await bilibili_uid.finish(msg)
+
+
+# 添加动态关注
+@bilibili_adddy.handle()
+async def handle_bilibili_adddy(bot: Bot, event: Event, state: dict):
+    if not dynamic_list or not live_list:
+        loadDatas()
+        loadUIDdata()
+
+    group = str(event.group_id)
+    uid = str(event.message).strip()
+    user_info = getUserInfobyUID(uid)
+    msg = ''
+    if user_info:
+        msg += '已添加到动态关注:\n' + user_info['name']
+        msg += '(' + uid + ')\n'
+        msg += '[CQ:image,file=' + user_info['face'] + ']'
+        msg += '\n性别:' + user_info['sex'] + '\n个人签名:\n' + user_info['sign']
+
+        # 添加uid名称映射
+        if uid not in uid_dict.keys():
+            uid_dict[uid] = user_info['name']
+        saveUIDdata()
+
+        # 添加uid到数据库
+        if group in dynamic_list.keys():
+            dynamic_list[group].append(uid)
+        else:
+            dynamic_list[group] = []
+            dynamic_list[group].append(uid)
+        saveDatas()
+    else:
+        msg += '未查询到用户.'
+
+    # 消息推送
+    await bilibili_adddy.finish(msg)
+
+
+# 取消动态关注
+@bilibili_deldy.handle()
+async def handle_bilibili_deldy(bot: Bot, event: Event, state: dict):
+    if not dynamic_list or not live_list:
+        loadDatas()
+        loadUIDdata()
+
+    group = str(event.group_id)
+    uid = str(event.message).strip()
+    msg = ''
+    # 删除
+    if group in dynamic_list.keys():
+        if uid in dynamic_list[group]:
+            dynamic_list[group].remove(uid)
+            msg += '用户' + str(uid) + '已取消动态关注.'
+            saveDatas()
+        else:
+            msg += '未关注该用户.'
+    else:
+        msg += '未关注该用户.'
+
+    # 消息推送
+    await bilibili_deldy.finish(msg)
+
+
+# 添加直播关注
+@bilibili_addly.handle()
+async def handle_bilibili_addly(bot: Bot, event: Event, state: dict):
+    if not dynamic_list or not live_list:
+        loadDatas()
+        loadUIDdata()
+
+    group = str(event.group_id)
+    uid = str(event.message).strip()
+    user_info = getUserInfobyUID(uid)
+    msg = ''
+    if user_info:
+        msg += '已添加到直播关注:\n' + user_info['name']
+        msg += '(' + uid + ')\n'
+        msg += '[CQ:image,file=' + user_info['face'] + ']'
+        msg += '\n性别:' + user_info['sex'] + '\n个人签名:\n' + user_info['sign']
+
+        # 添加uid名称映射
+        if uid not in uid_dict.keys():
+            uid_dict[uid] = user_info['name']
+        saveUIDdata()
+
+        # 添加
+        if group in live_list.keys():
+            live_list[group].append(uid)
+        else:
+            live_list[group] = []
+            live_list[group].append(uid)
+        saveDatas()
+    else:
+        msg.append += '未查询到用户.'
+
+    await bilibili_addly.finish(msg)
+
+
+# 取消直播关注
+@bilibili_delly.handle()
+async def handle_bilibili_delly(bot: Bot, event: Event, state: dict):
+    if not dynamic_list or not live_list:
+        loadDatas()
+        loadUIDdata()
+
+    group = str(event.group_id)
+    uid = str(event.message).strip()
+    msg = ''
+    # 删除
+    if group in live_list.keys():
+        if uid in live_list[group]:
+            live_list[group].remove(uid)
+            msg += '用户' + str(uid) + '已取消直播关注.'
+            saveDatas()
+        else:
+            msg += '未关注该用户.'
+    else:
+        msg += '未关注该用户.'
+    await bilibili_delly.finish(msg)
+
+
+# 动态关注列表
+@bilibili_dylist.handle()
+async def handle_bilibili_dylist(bot: Bot, event: Event, state: dict):
+    if not dynamic_list or not live_list:
+        loadDatas()
+        loadUIDdata()
+
+    group = str(event.group_id)
+
+    msg = ''
+    if group in dynamic_list.keys() and dynamic_list[group]:
+        msg += '本群(' + group + ')动态关注列表:'
+        for uid in dynamic_list[group]:
+            if uid in uid_dict.keys():
+                msg += '\n' + uid + '(' + uid_dict[uid] + ')'
+            else:
+                user_info = getUserInfobyUID(uid)
+                sleep(1)
+                if user_info:
+                    # 添加uid名称映射
+                    if uid not in uid_dict.keys():
+                        uid_dict[uid] = user_info['name']
+                    saveUIDdata()
+                    msg += '\n' + uid + '(' + uid_dict[uid] + ')'
+                else:
+                    msg += '\n' + uid + '(用户不存在)'
+    else:
+        msg += '本群关注列表为空'
+    await bilibili_dylist.finish(msg)
+
+
+# 直播关注列表
+@bilibili_lylist.handle()
+async def handle_bilibili_lylist(bot: Bot, event: Event, state: dict):
+    if not dynamic_list or not live_list:
+        loadDatas()
+        loadUIDdata()
+
+    group = str(event.group_id)
+
+    msg = ''
+    if group in live_list.keys() and live_list[group]:
+        msg += '本群(' + group + ')直播关注列表:'
+        for uid in live_list[group]:
+            if uid in uid_dict.keys():
+                msg += '\n' + uid + '(' + uid_dict[uid] + ')'
+            else:
+                user_info = getUserInfobyUID(uid)
+                sleep(1)
+                if user_info:
+                    # 添加uid名称映射
+                    if uid not in uid_dict.keys():
+                        uid_dict[uid] = user_info['name']
+                    saveUIDdata()
+                    msg += '\n' + uid + '(' + uid_dict[uid] + ')'
+                else:
+                    msg += '\n' + uid + '(用户不存在)'
+    else:
+        msg += '本群关注列表为空'
+    await bilibili_lylist.finish(msg)
 
 
 def loadUIDdata():
