@@ -4,17 +4,17 @@
 ### 环境要求
 
 1. 环境
-   - python3
-   - ~~CoolQ Air/Pro~~
-- Mirai-console/Mirai-ok
-  
+   - python3.7+
+- ~~Mirai-console/Mirai-ok~~
+- go-cqhttp
 2. python模块
-   - **nonebot2**
+   - **nonebot2**[full]
    - requests
    - APScheduler
    - ujson
    - msgpack
-
+- beautifulsoup
+   
 3. 酷Q插件
 
    - HTTP API
@@ -31,39 +31,23 @@
      >
      > 修改 ``ws_reverse_event_url`` 项为``ws://127.0.0.1:8080/ws/event/``
 
-   - Mirai
+   - ~~Mirai~~
 
-     > 下载 `miraiOK_windows_平台名.exe` ,运行下载基础文件后在 `config.txt ` 添加bot账号信息
+     > ~~下载 `miraiOK_windows_平台名.exe` ,运行下载基础文件后在 `config.txt ` 添加~~bot~~账号信息~~
      >
-     > 下载 `CQHTTPMirai-0.1.4.jar` ,放入 `plugins` 文件夹,重新运行
+     > ~~下载 `CQHTTPMirai-0.1.4.jar` ,放入 `plugins` 文件夹,重新运行~~
 
-### 文件结构(未更新)
+### 文件结构(更新中)
 
-- QQMakeGrassBot
+- QQMakeGrassBot_v2
 
   - bot
 
     > 主文件，用于启动bot
 
-  - config
-
-    > 参数设置文件
-
   - datas
 
     > 数据文件夹，存放数据文件
-
-    - ~~QQ_Group_List~~(已修改为数据库模式)
-
-      > 每行一个，表示需要监控的qq群号
-
-    - ~~UID_List~~(已修改为数据库模式)
-
-      > 每行以逗号分隔，对应 *QQ_Group_List* 每一行群所监控的uid列表
-
-    - ~~UID_Name_Dict~~(已修改为数据库模式)
-
-      > 每行以逗号分隔，为uid和对应的自定义名称(昵称)
 
     - BAIDU_API
 
@@ -80,6 +64,10 @@
     - livelist.json
 
       > 序列化的数据文件,通过指令管理
+      
+    - uidlist.json
+
+      > 序列化的数据文件,通过指令管理
 
   - dynamics
 
@@ -89,7 +77,7 @@
 
     > 找图插件临时文件夹,用于转发图片
 
-  - plugins
+  - src/plugins
 
     > 插件文件夹，存放自定义插件
 
