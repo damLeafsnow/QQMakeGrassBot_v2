@@ -1,4 +1,4 @@
-from nonebot import on_message, on_command
+from nonebot import on_command
 from nonebot.plugin import on_keyword
 from nonebot.adapters.cqhttp import Bot, Event
 from nonebot import scheduler, get_bots
@@ -10,58 +10,86 @@ from .bilibili import get_bilibili_info_by_b23tv, get_bilibili_live_info
 from .bilibili import getUserInfobyUID
 from .bilibili import GetDynamicStatus, GetLiveStatus
 
-bilibili_vid = on_keyword(
-    {"BV", "bv", "Bv", "bV", "AV", "av", "Av", "aV"}, priority=1, block=True)
+bilibili_vid = on_keyword({"BV", "bv", "Bv", "bV", "AV", "av", "Av", "aV"},
+                          priority=1,
+                          block=True)
 bilibili_b23 = on_keyword({"b23.tv"}, priority=1, block=True)
 bilibili_live = on_keyword({"live.bilibili.com"}, priority=1, block=True)
 bilibili_uid = on_keyword({"space.bilibili.com"}, priority=1, block=True)
 bilibili_user = on_command('用户查询', aliases={'uid'}, priority=1, block=True)
-bilibili_adddy = on_command('添加动态关注', aliases={'biliadddy'}, priority=1, block=True)
-bilibili_deldy = on_command('取消动态关注', aliases={'bilideldy'}, priority=1, block=True)
-bilibili_addly = on_command('添加直播关注', aliases={'biliaddlive'}, priority=1, block=True)
-bilibili_delly = on_command('取消直播关注', aliases={'bilidellive'}, priority=1, block=True)
-bilibili_dylist = on_command('动态关注列表', aliases={'bilidylist'}, priority=1, block=True)
-bilibili_lylist = on_command('直播关注列表', aliases={'bililivelist'}, priority=1, block=True)
+bilibili_adddy = on_command('添加动态关注',
+                            aliases={'biliadddy'},
+                            priority=1,
+                            block=True)
+bilibili_deldy = on_command('取消动态关注',
+                            aliases={'bilideldy'},
+                            priority=1,
+                            block=True)
+bilibili_addly = on_command('添加直播关注',
+                            aliases={'biliaddlive'},
+                            priority=1,
+                            block=True)
+bilibili_delly = on_command('取消直播关注',
+                            aliases={'bilidellive'},
+                            priority=1,
+                            block=True)
+bilibili_dylist = on_command('动态关注列表',
+                             aliases={'bilidylist'},
+                             priority=1,
+                             block=True)
+bilibili_lylist = on_command('直播关注列表',
+                             aliases={'bililivelist'},
+                             priority=1,
+                             block=True)
 debug_group = 1087849813
 dynamic_list = {}
 live_list = {}
 uid_dict = {}
+turn = 0
 
 
-@scheduler.scheduled_job('interval', minutes=5)
+@scheduler.scheduled_job('interval', minutes=10)
 # @scheduler.scheduled_job('interval', seconds=40)     # 测试用
 async def get_bilibili_infos():
+    global turn
     if not dynamic_list or not live_list:
         loadDatas()
         loadUIDdata()
 
     bots = get_bots()
     # print(bots)
-    bot = bots['2433627163']
+    bot = bots['2433627163']    # 当前bot使用号码
     # 获取动态更新
     for key in dynamic_list.keys():
         for uid in dynamic_list[key]:
             # print('dynamic'+uid)
-            sleep(0.2)
+            sleep(1)
             dynamic_content = GetDynamicStatus(uid, key)
             if dynamic_content:
+                print(uid+'有新动态。')
                 await bot.send_group_msg(group_id=debug_group,
-                                         message=uid+'有新动态,正在推送.')
+                                         message=uid + '有新动态,正在推送.')
                 for content in dynamic_content:
                     await bot.send_group_msg(group_id=key, message=content)
+            else:
+                print(uid+'没有新动态。')
 
     # 获取直播更新
     for key in live_list.keys():
         for uid in live_list[key]:
             # print('live'+uid)
-            sleep(0.2)
+            sleep(1)
             live_msg = GetLiveStatus(uid, key)
             if live_msg:
+                print(uid+'正在直播。')
                 await bot.send_group_msg(group_id=debug_group,
-                                         message=uid+'有新直播消息,正在推送.')
+                                         message=uid + '有新直播消息,正在推送.')
                 for content in live_msg:
                     await bot.send_group_msg(group_id=key, message=content)
-    print('interval get_bilibili_infos finished')
+            else:
+                print(uid+'未开播。')
+    turn += 1
+    print('第%d次动态、直播获取完成。' % turn)
 
 
 @bilibili_vid.handle()
@@ -84,10 +112,10 @@ async def handle_vid(bot: Bot, event: Event, state: dict):
 
     # 获取数据
     if vid.startswith('av'):
-        await bot.send_group_msg(group_id=debug_group, message='解析到av号:'+vid)
+        await bot.send_group_msg(group_id=debug_group, message='解析到av号:' + vid)
         info = get_bilibili_info_by_avid(vid[2:])
     elif vid.startswith('bv'):
-        await bot.send_group_msg(group_id=debug_group, message='解析到BV号:'+vid)
+        await bot.send_group_msg(group_id=debug_group, message='解析到BV号:' + vid)
         info = get_bilibili_info_by_bvid(vid)
     if not info:
         await bot.send_group_msg(group_id=debug_group, message='解析完成,非b站链接')
@@ -108,7 +136,7 @@ async def handle_b23(bot: Bot, event: Event, state: dict):
     i = 0
     for s in list:
         if s == 'b23.tv':
-            vid = list[i+1]
+            vid = list[i + 1]
             break
         i += 1
 
@@ -117,7 +145,7 @@ async def handle_b23(bot: Bot, event: Event, state: dict):
         vid = vid.split('?')[0]
 
     # 获取数据
-    await bot.send_group_msg(group_id=debug_group, message='解析到加密短链:'+vid)
+    await bot.send_group_msg(group_id=debug_group, message='解析到加密短链:' + vid)
     info = get_bilibili_info_by_b23tv(vid)
     if not info:
         await bot.send_group_msg(group_id=debug_group, message='解析完成,非b站链接')
@@ -139,7 +167,7 @@ async def handle_live(bot: Bot, event: Event, state: dict):
     i = 0
     for s in list:
         if s == 'live.bilibili.com':
-            vid = list[i+1]
+            vid = list[i + 1]
             break
         i += 1
 
@@ -148,7 +176,7 @@ async def handle_live(bot: Bot, event: Event, state: dict):
         vid = vid.split('?')[0]
 
     # 获取数据
-    await bot.send_group_msg(group_id=debug_group, message='解析到直播间地址:'+vid)
+    await bot.send_group_msg(group_id=debug_group, message='解析到直播间地址:' + vid)
     info = get_bilibili_live_info(vid)
     if not info:
         await bot.send_group_msg(group_id=debug_group, message='解析完成,直播间不存在')
@@ -170,10 +198,10 @@ async def bili_uid_search(bot: Bot, event: Event, state: dict):
     user_info = getUserInfobyUID(uid)
     msg = ''
     if user_info:
-        msg += '用户名:'+user_info['name']+'  性别:'+user_info['sex']+'\n'
-        msg += '[CQ:image,file='+user_info['face']+']'
-        msg += '个人签名:\n'+user_info['sign']
-        msg += '\n\n个人主页:https://space.bilibili.com/'+uid
+        msg += '用户名:' + user_info['name'] + '  性别:' + user_info['sex'] + '\n'
+        msg += '[CQ:image,file=' + user_info['face'] + ']'
+        msg += '个人签名:\n' + user_info['sign']
+        msg += '\n\n个人主页:https://space.bilibili.com/' + uid
 
         # 更新uid数据
         # todo
@@ -194,7 +222,7 @@ async def handle_uid(bot: Bot, event: Event, state: dict):
     i = 0
     for s in list:
         if s == 'space.bilibili.com':
-            vid = list[i+1]
+            vid = list[i + 1]
             break
         i += 1
 
@@ -203,14 +231,14 @@ async def handle_uid(bot: Bot, event: Event, state: dict):
         vid = vid.split('?')[0]
 
     # 获取数据
-    await bot.send_group_msg(group_id=debug_group, message='解析到个人uid:'+vid)
+    await bot.send_group_msg(group_id=debug_group, message='解析到个人uid:' + vid)
     user_info = getUserInfobyUID(vid)
     msg = ''
     if user_info:
-        msg += '用户名:'+user_info['name']+'  性别:'+user_info['sex']+'\n'
-        msg += '[CQ:image,file='+user_info['face']+']'
-        msg += '个人签名:\n'+user_info['sign']
-        msg += '\n\n个人主页:https://space.bilibili.com/'+vid
+        msg += '用户名:' + user_info['name'] + '  性别:' + user_info['sex'] + '\n'
+        msg += '[CQ:image,file=' + user_info['face'] + ']'
+        msg += '个人签名:\n' + user_info['sign']
+        msg += '\n\n个人主页:https://space.bilibili.com/' + vid
     else:
         await bot.send_group_msg(group_id=debug_group, message='解析完成,用户不存在')
         return
