@@ -5,6 +5,7 @@ from nonebot import scheduler, get_bots
 from time import sleep
 from os import path
 import json
+import re
 from .bilibili import get_bilibili_info_by_avid, get_bilibili_info_by_bvid
 from .bilibili import get_bilibili_info_by_b23tv, get_bilibili_live_info
 from .bilibili import getUserInfobyUID
@@ -42,6 +43,7 @@ bilibili_lylist = on_command('直播关注列表',
                              priority=1,
                              block=True)
 debug_group = 1087849813
+bot_list = [2433627163, 1721190339]
 dynamic_list = {}
 live_list = {}
 uid_dict = {}
@@ -56,9 +58,14 @@ async def get_bilibili_infos():
         loadDatas()
         loadUIDdata()
 
+    # 获取当前bot
     bots = get_bots()
-    # print(bots)
-    bot = bots['2433627163']    # 当前bot使用号码
+    bot = 0
+    for bot_num in bot_list:
+        if str(bot_num) in bots.keys():
+            bot = bots[str(bot_num)]
+            break
+
     # 获取动态更新
     for key in dynamic_list.keys():
         for uid in dynamic_list[key]:
@@ -94,15 +101,23 @@ async def get_bilibili_infos():
 
 @bilibili_vid.handle()
 async def handle_vid(bot: Bot, event: Event, state: dict):
+    # 防止bot套娃
+    sender = event.sender['user_id']
+    if sender in bot_list:
+        print("send by bot,ignore")
+        return
+
     msg = str(event.message)
-    msg = msg.lower()
+    # msg = msg.lower()
 
     # 检索视频号
-    list = msg.split('/')
+    # list = msg.split('/')
+    list = re.split("/|\?|\？|\n|\r|,|&", msg)
+    print(list)
     vid = 0
     info = []
     for i in list:
-        if i.startswith('av') or i.startswith('bv'):
+        if i.lower().startswith('av') or i.lower().startswith('bv'):
             vid = i
             break
 
@@ -111,10 +126,10 @@ async def handle_vid(bot: Bot, event: Event, state: dict):
         vid = vid.split('?')[0]
 
     # 获取数据
-    if vid.startswith('av'):
+    if vid.lower().startswith('av'):
         await bot.send_group_msg(group_id=debug_group, message='解析到av号:' + vid)
         info = get_bilibili_info_by_avid(vid[2:])
-    elif vid.startswith('bv'):
+    elif vid.lower().startswith('bv'):
         await bot.send_group_msg(group_id=debug_group, message='解析到BV号:' + vid)
         info = get_bilibili_info_by_bvid(vid)
     if not info:
@@ -127,10 +142,17 @@ async def handle_vid(bot: Bot, event: Event, state: dict):
 
 @bilibili_b23.handle()
 async def handle_b23(bot: Bot, event: Event, state: dict):
+    # 防止bot套娃
+    sender = event.sender['user_id']
+    if sender in bot_list:
+        print("send by bot,ignore")
+        return
+
     msg = str(event.message)
 
     # 检索视频号
-    list = msg.split('/')
+    # list = msg.split('/')
+    list = re.split("/|\?|\？|\n|\r|,|&", msg)
     info = []
     vid = ''
     i = 0
@@ -158,10 +180,17 @@ async def handle_b23(bot: Bot, event: Event, state: dict):
 #  直播间解析
 @bilibili_live.handle()
 async def handle_live(bot: Bot, event: Event, state: dict):
+    # 防止bot套娃
+    sender = event.sender['user_id']
+    if sender in bot_list:
+        print("send by bot,ignore")
+        return
+
     msg = str(event.message)
 
     # 检索直播间号
-    list = msg.split('/')
+    # list = msg.split('/')
+    list = re.split("/|\?|\？|\n|\r|,|&", msg)
     info = []
     vid = ''
     i = 0
@@ -214,6 +243,12 @@ async def bili_uid_search(bot: Bot, event: Event, state: dict):
 # 用户空间解析
 @bilibili_uid.handle()
 async def handle_uid(bot: Bot, event: Event, state: dict):
+    # 防止bot套娃
+    sender = event.sender['user_id']
+    if sender in bot_list:
+        print("send by bot,ignore")
+        return
+
     msg = str(event.message)
 
     # 检索uid号
