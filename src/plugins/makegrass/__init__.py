@@ -17,7 +17,7 @@ bot_list = [2433627163, 1721190339]
 async def handle_grass(bot: Bot, event: Event, state: dict):
     rnd = randint(1, 100)
     print("基本聊天,随机数:%d" % (rnd))
-    if rnd <= 25:
+    if rnd == 33 or rnd == 66 or rnd == 99:
         # 反问
         rawmsg = event.plain_text
         for name in disadlist:
@@ -54,17 +54,19 @@ async def handle_grass(bot: Bot, event: Event, state: dict):
         elif rnd in range(7, 11):
             rnd = randint(0, len(yygqlist)-1)
             await grass.finish(yygqlist[rnd])
-    elif rnd == 66:
-        await grass.finish('http://game.granbluefantasy.jp/')
+    # elif rnd == 66:
+        # await grass.finish('http://game.granbluefantasy.jp/')
 
 
 @disable.handle()
 async def handle_disable(bot: Bot, event: Event, state: dict):
-    # 防止bot套娃
-    sender = event.sender['user_id']
-    if sender in bot_list:
-        print("send by bot,ignore")
-        return
-
-    key = event.plain_text[0:2]
-    await grass.finish(key+event.plain_text)
+    rnd = randint(1, 100)
+    print("反问,随机数:%d" % (rnd))
+    if rnd == 33 or rnd == 66 or rnd == 99:
+        # 防止bot套娃
+        sender = event.sender['user_id']
+        if sender in bot_list:
+            print("send by bot,ignore")
+            return
+        key = event.plain_text[0:2]
+        await grass.finish(key+event.plain_text)

@@ -76,8 +76,8 @@ async def get_bilibili_infos():
                 print(uid+'有新动态。')
                 await bot.send_group_msg(group_id=debug_group,
                                          message=uid + '有新动态,正在推送.')
-                for content in dynamic_content:
-                    await bot.send_group_msg(group_id=key, message=content)
+                # for content in dynamic_content:
+                await bot.send_group_msg(group_id=key, message=dynamic_content)
             else:
                 print(uid+'没有新动态。')
 
@@ -91,8 +91,8 @@ async def get_bilibili_infos():
                 print(uid+'正在直播。')
                 await bot.send_group_msg(group_id=debug_group,
                                          message=uid + '有新直播消息,正在推送.')
-                for content in live_msg:
-                    await bot.send_group_msg(group_id=key, message=content)
+                # for content in live_msg:
+                await bot.send_group_msg(group_id=key, message=live_msg)
             else:
                 print(uid+'未开播。')
     turn += 1

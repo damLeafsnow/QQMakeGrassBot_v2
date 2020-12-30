@@ -164,51 +164,51 @@ def GetDynamicStatus(uid, i):
     # print(last_dynamic_str)
 
     index = 0
-    content_list = []
+    # content_list = []
+    content_list = ""
     cards_data[0]['card'] = json.loads(
         cards_data[0]['card'], encoding='gb2312')
     nowtime = time.time().__int__()
     # card是字符串，需要重新解析
     while last_dynamic_str != cards_data[index]['desc']['dynamic_id_str']:
-        # 这条是600秒前发的。
+        # 这条是600秒前发的
         if nowtime-cards_data[index]['desc']['timestamp'] > 600:
             break
         try:
+            # 专栏(似乎不生效)
             if (cards_data[index]['desc']['type'] == 64):
-                content_list.append(
-                    user_info['name'] + '发了新专栏「' + cards_data[index]['card']['title'] + '」并说： ' + cards_data[index]['card']['dynamic'])
+                content_list += user_info['name'] + '发了新专栏「' + cards_data[index]['card']['title'] + \
+                    '」并说： ' + cards_data[index]['card']['dynamic'] + '\n'
                 imageurls = cards_data[index]['card']['image_urls']
                 if imageurls:
                     for images in cards_data[index]['card']['image_urls']:
-                        content_list.append('[CQ:image,file='+images+']')
+                        # content_list.append('[CQ:image,file='+images+']')
+                        content_list += '[CQ:image,file='+images+']'+'\n'
             else:
+                # 视频投稿
                 if (cards_data[index]['desc']['type'] == 8):
-                    content_list.append(user_info['name'] + '发了新视频「' + cards_data[index]['card']['title'] + '」'
-                                        + '[CQ:image,file=' +
-                                        cards_data[index]['card']['pic']+']\n'
-                                        + cards_data[index]['card']['dynamic']
-                                        )
+                    content_list += user_info['name'] + '发了新视频「' + \
+                        cards_data[index]['card']['title'] + '」' + '\n'
+                    + '[CQ:image,file='
+                    + cards_data[index]['card']['pic']+']\n'
+                    + cards_data[index]['card']['dynamic'] + '\n'
                 else:
                     if ('description' in cards_data[index]['card']['item']):
                         # 带图新动态
-                        content_list.append(
-                            user_info['name'] + '发了新动态： ' + cards_data[index]['card']['item']['description'])
-                        # CQ使用参考：[CQ:image,file=http://i1.piimg.com/567571/fdd6e7b6d93f1ef0.jpg]
+                        content_list += user_info['name'] + '发了新动态： ' + cards_data[index]['card']['item']['description'] + '\n'
                         for pic_info in cards_data[index]['card']['item']['pictures']:
-                            content_list.append(
-                                '[CQ:image,file='+pic_info['img_src']+']')
+                            content_list += '[CQ:image,file='+pic_info['img_src']+']' + '\n'
                     else:
-                        # 转发动态
-                        if 'origin_user' in cards_data[index]['card']:
-                            origin_name = cards_data[index]['card']['origin_user']['info']['uname']
-                            content_list.append(
-                                user_info['name'] + '转发了「' + origin_name + '」的动态并说： ' + cards_data[index]['card']['item']['content'])
-                        else:
-                            # 这个是不带图的自己发的动态
-                            content_list.append(
-                                user_info['name'] + '发了新动态： ' + cards_data[index]['card']['item']['content'])
-            content_list.append('本条动态地址为'+'https://t.bilibili.com/' +
-                                cards_data[index]['desc']['dynamic_id_str'])
+                        # 转发动态 (暂时不要)
+                        # if 'origin_user' in cards_data[index]['card']:
+                        #     origin_name = cards_data[index]['card']['origin_user']['info']['uname']
+                        #     content_list.append(
+                        #         user_info['name'] + '转发了「' + origin_name + '」的动态并说： ' + cards_data[index]['card']['item']['content'])
+                        # else:
+                        # 这个是不带图的自己发的动态
+                        content_list += user_info['name'] + '发了新动态： ' + cards_data[index]['card']['item']['content'] + '\n'
+            content_list += '动态地址:'+'https://t.bilibili.com/' + \
+                cards_data[index]['desc']['dynamic_id_str']
         except Exception as err:
             print('PROCESS ERROR')
             print(err)
@@ -245,9 +245,13 @@ def GetLiveStatus(uid, i):
                 live_url = live_data['url']
                 live_cover = live_data['cover']
                 live_watcher = str(live_data['online'])
-                live_msg = []
-                live_msg.append(user_info['name'] + '直播中:' + live_title)
-                live_msg.append('[CQ:image,file='+live_cover+']')
-                live_msg.append('直播地址:'+live_url+'\n当前观看人数:'+live_watcher)
+                # live_msg = []
+                # live_msg.append(user_info['name'] + '直播中:' + live_title)
+                # live_msg.append('[CQ:image,file='+live_cover+']')
+                # live_msg.append('直播地址:'+live_url+'\n当前观看人数:'+live_watcher)
+                live_msg = ''
+                live_msg += user_info['name'] + '直播中:' + live_title+'\n'
+                live_msg += '[CQ:image,file='+live_cover+']'+'\n'
+                live_msg += '直播地址:'+live_url+'\n当前观看人数:'+live_watcher
                 return live_msg
     return ''
