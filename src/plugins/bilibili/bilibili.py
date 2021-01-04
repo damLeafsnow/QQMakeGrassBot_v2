@@ -164,8 +164,8 @@ def GetDynamicStatus(uid, i):
     # print(last_dynamic_str)
 
     index = 0
-    # content_list = []
-    content_list = ""
+    content_list = []
+    # content_list = ""
     cards_data[0]['card'] = json.loads(
         cards_data[0]['card'], encoding='gb2312')
     nowtime = time.time().__int__()
@@ -177,27 +177,41 @@ def GetDynamicStatus(uid, i):
         try:
             # 专栏(似乎不生效)
             if (cards_data[index]['desc']['type'] == 64):
-                content_list += user_info['name'] + '发了新专栏「' + cards_data[index]['card']['title'] + \
-                    '」并说： ' + cards_data[index]['card']['dynamic'] + '\n'
+                print('type64:新专栏')
+                str_zhuanlan = user_info['name'] + '发了新专栏\n「' + \
+                    cards_data[index]['card']['title'] + '」\n'
                 imageurls = cards_data[index]['card']['image_urls']
                 if imageurls:
                     for images in cards_data[index]['card']['image_urls']:
-                        # content_list.append('[CQ:image,file='+images+']')
-                        content_list += '[CQ:image,file='+images+']'+'\n'
+                        str_zhuanlan += '[CQ:image,file='+images+']'+'\n'
+                str_zhuanlan += cards_data[index]['card']['dynamic'] + '\n'
+                str_zhuanlan += '动态地址:'+'https://t.bilibili.com/' + \
+                    cards_data[index]['desc']['dynamic_id_str']
+                content_list.append(str_zhuanlan)
             else:
                 # 视频投稿
                 if (cards_data[index]['desc']['type'] == 8):
-                    content_list += user_info['name'] + '发了新视频「' + \
-                        cards_data[index]['card']['title'] + '」' + '\n'
-                    + '[CQ:image,file='
-                    + cards_data[index]['card']['pic']+']\n'
-                    + cards_data[index]['card']['dynamic'] + '\n'
+                    print('type8:新视频')
+                    str_shipin = user_info['name'] + '发了新视频\n「' + \
+                        cards_data[index]['card']['title'] + '」\n'
+                    str_shipin += '[CQ:image,file=' + \
+                        cards_data[index]['card']['pic']+']\n'
+                    str_shipin += cards_data[index]['card']['dynamic'] + '\n'
+                    str_shipin += '动态地址:'+'https://t.bilibili.com/' + \
+                        cards_data[index]['desc']['dynamic_id_str']
+                    content_list.append(str_shipin)
                 else:
+                    print('type2048:新动态')
+                    # 带图
                     if ('description' in cards_data[index]['card']['item']):
-                        # 带图新动态
-                        content_list += user_info['name'] + '发了新动态： ' + cards_data[index]['card']['item']['description'] + '\n'
+                        str_dongtai = user_info['name'] + '发了新动态:\n' + \
+                            cards_data[index]['card']['item']['description'] + '\n'
                         for pic_info in cards_data[index]['card']['item']['pictures']:
-                            content_list += '[CQ:image,file='+pic_info['img_src']+']' + '\n'
+                            str_dongtai += '[CQ:image,file=' + \
+                                pic_info['img_src']+']' + '\n'
+                        str_dongtai += '动态地址:'+'https://t.bilibili.com/' + \
+                            cards_data[index]['desc']['dynamic_id_str']
+                        content_list.append(str_dongtai)
                     else:
                         # 转发动态 (暂时不要)
                         # if 'origin_user' in cards_data[index]['card']:
@@ -206,9 +220,11 @@ def GetDynamicStatus(uid, i):
                         #         user_info['name'] + '转发了「' + origin_name + '」的动态并说： ' + cards_data[index]['card']['item']['content'])
                         # else:
                         # 这个是不带图的自己发的动态
-                        content_list += user_info['name'] + '发了新动态： ' + cards_data[index]['card']['item']['content'] + '\n'
-            content_list += '动态地址:'+'https://t.bilibili.com/' + \
-                cards_data[index]['desc']['dynamic_id_str']
+                        str_dongtai = user_info['name'] + '发了新动态:\n' + \
+                            cards_data[index]['card']['item']['content'] + '\n'
+                        str_dongtai += '动态地址:'+'https://t.bilibili.com/' + \
+                            cards_data[index]['desc']['dynamic_id_str']
+                        content_list.append(str_dongtai)
         except Exception as err:
             print('PROCESS ERROR')
             print(err)

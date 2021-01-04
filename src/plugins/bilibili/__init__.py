@@ -76,8 +76,8 @@ async def get_bilibili_infos():
                 print(uid+'有新动态。')
                 await bot.send_group_msg(group_id=debug_group,
                                          message=uid + '有新动态,正在推送.')
-                # for content in dynamic_content:
-                await bot.send_group_msg(group_id=key, message=dynamic_content)
+                for content in dynamic_content:
+                    await bot.send_group_msg(group_id=key, message=content)
             else:
                 print(uid+'没有新动态。')
 
