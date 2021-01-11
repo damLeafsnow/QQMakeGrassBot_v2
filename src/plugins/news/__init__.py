@@ -3,13 +3,15 @@ from nonebot.adapters.cqhttp import Bot, Event
 import requests
 from bs4 import BeautifulSoup
 
-news = on_command("新闻", priority=1, block=True)
+news = on_command("热搜", priority=1, block=True)
 
 
 # 添加一个处理函数
 @news.handle()
 async def handle_news(bot: Bot, event: Event, state: dict):
-    
+    news_list = get_pages()
+    await news.finish(news_list)
+
 
 def get_pages():
     url = 'http://top.baidu.com/buzz?b=1&fr=20811'
